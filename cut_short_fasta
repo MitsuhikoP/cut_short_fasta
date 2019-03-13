@@ -1,0 +1,36 @@
+#!/usr/bin/env perl
+# copyright (c) 2016 Mitsuhiko Sato. All Rights Reserved.
+# Mitsuhiko Sato ( E-mail: mitsuhikoevolution@gmail.com )
+use strict;
+use warnings;
+die "USAGE: cut_short_fasta input_file.fasta NUM > output_file.fasta\n" if(@ARGV != 2);
+
+my $limit=$ARGV[1];
+open(IN,$ARGV[0]) or die "$!";
+if($ARGV[0] =~ /\.gz$/){
+    close(IN);
+    open(IN,"gzip -dc $ARGV[0] |") or die "$!";
+}
+
+my %seqs;
+my $gene_name;
+while (my $line=<IN>){
+    chomp($line);
+    if($line =~ /^>(\S+)/){
+$gene_name=$1;
+$seqs{$gene_name}="";
+    }else{
+        $seqs{$gene_name}=$seqs{$gene_name}.$line;
+    }
+}
+close(IN);
+
+my $len;
+foreach my $chrom ( sort keys(%seqs) ){
+    $len=length($seqs{$chrom});
+    if($len <= $limit){
+        next;
+    }else{
+        print ">$chrom\n$seqs{$chrom}\n";
+    }
+}
